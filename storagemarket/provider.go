@@ -2,9 +2,8 @@ package storagemarket
 
 import (
 	"context"
-	"io"
-
 	"github.com/ipfs/go-cid"
+	"os"
 
 	"github.com/filecoin-project/go-state-types/abi"
 
@@ -57,7 +56,7 @@ type StorageProvider interface {
 	GetStorageCollateral(ctx context.Context) (Balance, error)
 
 	// ImportDataForDeal manually imports data for an offline storage deal
-	ImportDataForDeal(ctx context.Context, propCid cid.Cid, data io.Reader) error
+	ImportDataForDeal(ctx context.Context, propCid cid.Cid, data *os.File) error
 
 	// SubscribeToEvents listens for events that happen related to storage deals on a provider
 	SubscribeToEvents(subscriber ProviderSubscriber) shared.Unsubscribe

@@ -333,7 +333,7 @@ func (p *Provider) Stop() error {
 // ImportDataForDeal manually imports data for an offline storage deal
 // It will verify that the data in the passed io.Reader matches the expected piece
 // cid for the given deal or it will error
-func (p *Provider) ImportDataForDeal(ctx context.Context, propCid cid.Cid, data io.Reader) error {
+func (p *Provider) ImportDataForDeal(ctx context.Context, propCid cid.Cid, data *os.File) error {
 	// TODO: be able to check if we have enough disk space
 	var d storagemarket.MinerDeal
 	if err := p.deals.Get(propCid).Get(&d); err != nil {
@@ -344,21 +344,28 @@ func (p *Provider) ImportDataForDeal(ctx context.Context, propCid cid.Cid, data 
 	if err != nil {
 		return xerrors.Errorf("failed to create temp file for data import: %w", err)
 	}
-	defer tempfi.Close()
+	src := data.Name()
+	path := tempfi.OsPath()
+	dist := string(path)
+	_ = tempfi.Close()
+	_ = os.Remove(dist)
+
+	log.Debugw("will link imported file to local file", "propCid", propCid, "src", src, "dist", dist)
+	err = os.Symlink(src, dist)
+	if err != nil {
+		_ = p.fs.Delete(tempfi.Path())
+		return xerrors.Errorf("importing deal data failed: %w", err)
+	}
+	log.Debugw("finished link imported file to local file", "propCid", propCid)
+
+	tempfi, err = p.fs.Open(filestore.Path(path))
+	if nil != err {
+		return xerrors.Errorf("open deal temp file error: %w", err)
+	}
 	cleanup := func() {
 		_ = tempfi.Close()
 		_ = p.fs.Delete(tempfi.Path())
 	}
-
-	log.Debugw("will copy imported file to local file", "propCid", propCid)
-	n, err := io.Copy(tempfi, data)
-	if err != nil {
-		cleanup()
-		return xerrors.Errorf("importing deal data failed: %w", err)
-	}
-	log.Debugw("finished copying imported file to local file", "propCid", propCid)
-
-	_ = n // TODO: verify n?
 
 	carSize := uint64(tempfi.Size())
 
