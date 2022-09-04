@@ -358,7 +358,7 @@ func (p *Provider) ImportDataForDeal(ctx context.Context, propCid cid.Cid, data 
 	}
 	log.Debugw("finished link imported file to local file", "propCid", propCid)
 
-	tempfi, err = p.fs.Open(filestore.Path(path))
+	tempfi, err = p.fs.Open(tempfi.Path())
 	if nil != err {
 		return xerrors.Errorf("open deal temp file error: %w", err)
 	}
