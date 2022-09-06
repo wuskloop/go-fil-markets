@@ -408,7 +408,7 @@ func (p *Provider) ImportDataForDeal(ctx context.Context, propCid cid.Cid, data 
 	//	return xerrors.Errorf("given data does not match expected commP (got: %s, expected %s)", pieceCid, d.Proposal.PieceCID)
 	//}
 	//
-	//log.Debugw("will fire ProviderEventVerifiedData for imported file", "propCid", propCid)
+	log.Debugw("will fire ProviderEventVerifiedData for imported file", "propCid", propCid)
 
 	return p.deals.Send(propCid, storagemarket.ProviderEventVerifiedData, tempfi.Path(), filestore.Path(""))
 }
